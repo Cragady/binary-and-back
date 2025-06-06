@@ -1,0 +1,6 @@
+add_custom_target(
+  run
+  DEPENDS BAB
+  COMMAND BAB
+  WORKING_DIRECTORY ${BUILD_OUTPUT}
+)
