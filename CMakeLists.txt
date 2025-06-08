@@ -34,6 +34,8 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # TODO: see if this is only necessary for Windows
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 
+include(SDLImport)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_C_STANDARD 17)

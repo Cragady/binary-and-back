@@ -1,9 +1,11 @@
 set (BAB_SOURCES
   ${BAB_SOURCES_DIR}/bab/bab.c
+  ${BAB_SOURCES_DIR}/bab/sdl_impl/sdl_impl.c
   ${BAB_SOURCES_DIR}/utils/endian.c
 )
 
 set (BAB_HEADERS
+  ${BAB_SOURCES_DIR}/bab/sdl_impl/sdl_impl.h
   ${BAB_SOURCES_DIR}/utils/endian.h
 )
 
@@ -25,6 +27,8 @@ target_include_directories(BABlib
   $<BUILD_INTERFACE:${BAB_SOURCES_DIR}>
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
 )
+
+target_link_libraries(BABlib PUBLIC SDL3::SDL3)
 
 add_executable(BAB main.c)
 

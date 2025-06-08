@@ -1,58 +1,63 @@
-#include "bab/bab.h"
-
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "bab/sdl_impl/sdl_impl.h"
-#include "utils/endian.h"
 
-int bab_entry() {
-  int failure = 0;
-  do {
-    failure = no_sdl();
-    if (failure) break;
-    failure = sdl_impl_entry();
-  } while (0);
+#include <assert.h>
+#include <stdio.h>
+#include <SDL3/SDL_endian.h>
 
-  return failure;
+#define FILE_NAME "bin_files/sdl_test"
+
+int sdl_impl_entry() {
+  printf("\n\n-------------\n\n");
+  printf("SDL Impl: \n");
+  log_sdl_endianness();
+
+
+  SdlData data = { .c = 'd', .i = 8, .s = 4, .b = true, .test = 0x10ff, };
+
+  write_file(FILE_NAME ".wat", data);
+  write_text_file(FILE_NAME ".txt", data);
+  read_log_compare_data(FILE_NAME ".wat", data);
+
+  return 0;
 }
 
-int no_sdl() {
-  is_little_endian(ENDIAN_TYPE_BIG);
-  log_endianness();
-
-  FILE *file = fopen("bin_files/name-here.wat", "wb+");
-  if (file == NULL) {
-    printf("Could not open, or allocate space, for file!\n");
-    exit(1);
+void log_sdl_endianness() {
+  if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+    printf("SDL: Big Endian System\n");
+  } else if (SDL_BYTEORDER == SDL_LIL_ENDIAN) {
+    printf("SDL: Little Endian System\n");
   }
+}
 
-  SimpleData data = { .c = 'd', .i = 8, .s = 4, .b = true, .test = 0x10ff, };
-  // NOTE: we'll get `copy_data` by having a copy assignment happen in a
-  // funciton argument
-  SimpleData copy_data = data;
+FILE *open_file(const char *restrict file_name, const char *restrict mode) {
+  FILE *file = fopen(file_name, mode);
+  assert(file);
+  return file;
+}
+
+void write_file(const char *restrict file_name, SdlData data) {
+  FILE *file = open_file(file_name, "wb+");
 
   // NOTE: we have no need to swap a 1 byte large data chunk
-  fwrite(&copy_data.c, sizeof(copy_data.c), 1, file);
-  copy_data.i = swap32(copy_data.i);
-  fwrite(&copy_data.i, sizeof(copy_data.i), 1, file);
-  copy_data.s = swap16(copy_data.s);
-  fwrite(&copy_data.s, sizeof(copy_data.s), 1, file);
+  fwrite(&data.c, sizeof(data.c), 1, file);
+  // TODO: find better way to do this
+  if (SDL_BYTEORDER == SDL_LIL_ENDIAN) {
+    data.i = SDL_Swap32(data.i);
+  }
+  fwrite(&data.i, sizeof(data.i), 1, file);
+  data.s = SDL_Swap16(data.s);
+  fwrite(&data.s, sizeof(data.s), 1, file);
   // NOTE: we have no need to swap a 1 byte large data chunk
-  fwrite(&copy_data.b, sizeof(copy_data.b), 1, file);
-  copy_data.test = swap16(copy_data.test);
-  fwrite(&copy_data.test, sizeof(copy_data.test), 1, file);
+  fwrite(&data.b, sizeof(data.b), 1, file);
+  data.test = SDL_Swap16(data.test);
+  fwrite(&data.test, sizeof(data.test), 1, file);
 
   fclose(file);
   printf("Manual data write success!\n");
+}
 
-  FILE *txt = fopen("bin_files/name-here.txt", "w+");
-
-  if (txt == NULL) {
-    printf("Could not open, or allocate space, for file!\n");
-    exit(1);
-  }
+void write_text_file(const char *restrict file_name, SdlData data) {
+  FILE *txt = open_file(file_name, "w+");
 
   fprintf(txt, "%b\n", data.c);
   fprintf(txt, "%b\n", data.i);
@@ -61,23 +66,19 @@ int no_sdl() {
   fprintf(txt, "%b\n", data.test);
 
   fclose(txt);
+  printf("Data as binary text write seuccess!\n");
+}
 
-  file = fopen("bin_files/name-here.wat", "rb");
-  if (file == NULL) {
-    printf("Could not open file!\n");
-    exit(0);
-  }
-
-  char buff[BYTES];
-  char data_buff[KILO_BYTE];
+void read_log_compare_data(const char *restrict file_name, SdlData data) {
+  FILE *file = open_file(file_name, "rb");
   size_t bytes_read = 0;
 
-  // NOTE: this is for just reading. Segment file into data chunks
-  // while ((bytes_read = fread(buff, BYTES, sizeof(buff), file)) > 0) {
+  // NOTE: can alternatively read byte by byte and convert that way instead,
+  // but that seems like a pain. If there are arrays, a buffer may be necessary
+  // char buff[BYTES];
+  // char data_buff[KILO_BYTE];
+  SdlData read_bytes;
 
-  // }
-
-  SimpleData read_bytes;
   do {
     bytes_read = fread(&read_bytes.c, sizeof(read_bytes.c), 1, file);
     if (bytes_read == 0) break;
@@ -86,12 +87,12 @@ int no_sdl() {
 
     bytes_read = fread(&read_bytes.i, sizeof(read_bytes.i), 1, file);
     if (bytes_read == 0) break;
-    read_bytes.i = swap32(read_bytes.i);
+    read_bytes.i = SDL_Swap32BE(read_bytes.i);
 
 
     bytes_read = fread(&read_bytes.s, sizeof(read_bytes.s), 1, file);
     if (bytes_read == 0) break;
-    read_bytes.s = swap16(read_bytes.s);
+    read_bytes.s = SDL_Swap16BE(read_bytes.s);
 
 
     bytes_read = fread(&read_bytes.b, sizeof(read_bytes.b), 1, file);
@@ -101,7 +102,7 @@ int no_sdl() {
 
     bytes_read = fread(&read_bytes.test, sizeof(read_bytes.test), 1, file);
     if (bytes_read == 0) break;
-    read_bytes.test = swap16(read_bytes.test);
+    read_bytes.test = SDL_Swap16BE(read_bytes.test);
 
   } while (0);
 
@@ -138,7 +139,4 @@ int no_sdl() {
     printf("End of file was not reached!\n");
   }
   fclose(file);
-
-  return 0;
 }
-
