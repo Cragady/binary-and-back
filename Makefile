@@ -11,7 +11,8 @@ cmake:
 
 .PHONY : cmake
 
+# NOTE: -s suppresses output from make
 run:
-	cd build && make run
+	cd build && make run -s
 
 .PHONY : run

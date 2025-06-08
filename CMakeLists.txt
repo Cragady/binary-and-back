@@ -25,6 +25,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BUILD_OUTPUT}/lib)
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILD_OUTPUT})
 
+# TODO: pass 'bin_files' as a var to build
+file(MAKE_DIRECTORY ${BUILD_OUTPUT}/bin_files)
+
 # Anywhere you see include(...) you can check <root>/cmake for that file
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
