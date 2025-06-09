@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdio.h>
+#include <SDL3/SDL_iostream.h>
 
 typedef struct SdlData_s {
   char c;
@@ -13,9 +13,18 @@ typedef struct SdlData_s {
   uint16_t test;
 } SdlData;
 
+typedef enum FILE_OPERATIONS_E {
+  FILE_OPERATIONS_OPEN,
+  FILE_OPERATIONS_WRITE_PORTION,
+  FILE_OPERATIONS_FLUSH,
+  FILE_OPERATIONS_CLOSE,
+  FILE_OPERATIONS_SUCCESS,
+  FILE_OPERATIONS_READ,
+} FILE_OPERATIONS_;
+
 int sdl_impl_entry();
 void log_sdl_endianness();
-FILE *open_file(const char *restrict file_name, const char *restrict mode);
+void log_sdl_file_operation_status(FILE_OPERATIONS_ code);
 void write_file(const char *restrict file_name, SdlData data);
 void write_text_file(const char *restrict file_name, SdlData data);
 void read_log_compare_data(const char *restrict file_name, SdlData data);
