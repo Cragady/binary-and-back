@@ -135,7 +135,7 @@ void write_text_file(const char *restrict file_name, SdlData data) {
 }
 
 void read_log_compare_data(const char *restrict file_name, SdlData data) {
-  FILE_OPERATIONS_ status;
+  FILE_OPERATIONS_ status = 0;
   do {
     bool successful_operation = true;
 
