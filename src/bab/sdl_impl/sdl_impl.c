@@ -6,6 +6,7 @@
 #include <SDL3/SDL_iostream.h>
 
 #define FILE_NAME "bin_files/sdl_test"
+#define LOG_SUCCESS false
 
 // TODO: change instances of SDL_Log to appropriate log level call
 
@@ -57,11 +58,12 @@ void log_sdl_file_operation_status(FILE_OPERATIONS_ code) {
 
 void write_file(const char *restrict file_name, SdlData data) {
   FILE_OPERATIONS_ status = 0;
+  SDL_IOStream *file;
 
   do {
     bool successful_operation = true;
 
-    SDL_IOStream *file = SDL_IOFromFile(file_name, "wb+");
+    file = SDL_IOFromFile(file_name, "wb+");
     if (file == NULL) break;
     status++;
 
@@ -89,22 +91,21 @@ void write_file(const char *restrict file_name, SdlData data) {
     if (!successful_operation) break;
     status++;
 
-    successful_operation = SDL_CloseIO(file);
-    if (!successful_operation) break;
-    status++;
+    if (!close_file(file, &status)) break;
 
   } while(0);
 
-  log_sdl_file_operation_status(status);
+  close_file(file, &status);
 }
 
 void write_text_file(const char *restrict file_name, SdlData data) {
   FILE_OPERATIONS_ status = 0;
+  SDL_IOStream *txt;
 
   do {
     bool successful_operation = true;
 
-    SDL_IOStream *txt = SDL_IOFromFile(file_name, "w+");
+    txt = SDL_IOFromFile(file_name, "w+");
     if (txt == NULL) break;
     status++;
 
@@ -125,21 +126,20 @@ void write_text_file(const char *restrict file_name, SdlData data) {
     if (!successful_operation) break;
     status++;
 
-    successful_operation = SDL_CloseIO(txt);
-    if (!successful_operation) break;
-    status++;
+    close_file(txt, &status);
 
   } while(0);
 
-  log_sdl_file_operation_status(status);
+  close_file(txt, &status);
 }
 
 void read_log_compare_data(const char *restrict file_name, SdlData data) {
   FILE_OPERATIONS_ status = 0;
+  SDL_IOStream *file;
   do {
     bool successful_operation = true;
 
-    SDL_IOStream *file = SDL_IOFromFile(file_name, "rb");
+    file = SDL_IOFromFile(file_name, "rb");
     if (file == NULL) break;
     size_t bytes_read = 0;
     status = FILE_OPERATIONS_READ;
@@ -206,13 +206,27 @@ void read_log_compare_data(const char *restrict file_name, SdlData data) {
     if (!end_reached) {
       SDL_Log("End of file was not reached!\n");
     }
-    status = FILE_OPERATIONS_CLOSE;
-
-    successful_operation = SDL_CloseIO(file);
-    if (!successful_operation) break;
     status++;
 
+    if (!close_file(file, &status)) break;
   } while (0);
 
-  log_sdl_file_operation_status(status);
+  close_file(file, &status);
+
+}
+
+bool close_file(SDL_IOStream *file, FILE_OPERATIONS_ *status) {
+  if (*status == FILE_OPERATIONS_SUCCESS) {
+    return true;
+  }
+  if (*status != FILE_OPERATIONS_CLOSE) log_sdl_file_operation_status(*status);
+
+  if (SDL_CloseIO(file)) {
+    *status = FILE_OPERATIONS_SUCCESS;
+    if (LOG_SUCCESS) log_sdl_file_operation_status(*status);
+    return true;
+  }
+  *status = FILE_OPERATIONS_CLOSE;
+  log_sdl_file_operation_status(*status);
+  return false;
 }

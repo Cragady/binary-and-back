@@ -28,5 +28,6 @@ void log_sdl_file_operation_status(FILE_OPERATIONS_ code);
 void write_file(const char *restrict file_name, SdlData data);
 void write_text_file(const char *restrict file_name, SdlData data);
 void read_log_compare_data(const char *restrict file_name, SdlData data);
+bool close_file(SDL_IOStream *file, FILE_OPERATIONS_ *status);
 
 #endif
